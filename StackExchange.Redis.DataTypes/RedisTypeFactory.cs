@@ -8,7 +8,7 @@ namespace StackExchange.Redis.DataTypes
 {
 	public class RedisTypeFactory : IRedisTypeFactory
 	{
-		private readonly IDatabase database;
+		//private readonly IDatabase database;
 		private readonly StackExchangeRedisCacheClient CacheClient;
 
 
@@ -30,7 +30,7 @@ namespace StackExchange.Redis.DataTypes
 
 			}
 
-			this.database = CacheClient.Database;
+			//this.database = CacheClient.Database;
 		}
 		public TValue GetValue<TValue>(string key)
 		{
@@ -48,7 +48,7 @@ namespace StackExchange.Redis.DataTypes
 
 		public RedisSet<T> GetSet<T>(string name)
 		{
-			return new RedisSet<T>(database, name);
+			return new RedisSet<T>(CacheClient, name);
 		}
 
 		public RedisList<T> GetList<T>(string name)

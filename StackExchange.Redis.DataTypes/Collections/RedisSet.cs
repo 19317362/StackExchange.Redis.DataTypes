@@ -1,4 +1,5 @@
-﻿using System;
+﻿using StackExchange.Redis.Extensions.Core;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,27 +10,27 @@ namespace StackExchange.Redis.DataTypes.Collections
 	{
 		private const string RedisKeyTemplate = "Set:{0}";
 
-		private readonly IDatabase database;
+		private readonly StackExchangeRedisCacheClient CacheClient;
 		private readonly string redisKey;
 
-		public RedisSet(IDatabase database, string name)
+		public RedisSet(StackExchangeRedisCacheClient cacheClient, string name)
 		{
-			if (database == null)
+			if (cacheClient == null)
 			{
-				throw new ArgumentNullException("database");
+				throw new ArgumentNullException("CacheClient");
 			}
 			if (name == null)
 			{
 				throw new ArgumentNullException("name");
 			}
 
-			this.database = database;
+			this.CacheClient = cacheClient;
 			this.redisKey = string.Format(RedisKeyTemplate, name);
 		}
 
 		public bool Add(T item)
 		{
-			return database.SetAdd(redisKey, item.ToRedisValue());
+			return CacheClient.Database.SetAdd(redisKey, CacheClient.Serializer.Serialize( item) );
 		}
 
 		public long Add(IEnumerable<T> items)
@@ -39,7 +40,12 @@ namespace StackExchange.Redis.DataTypes.Collections
 				throw new ArgumentNullException("items");
 			}
 
-			return database.SetAdd(redisKey, items.ToRedisValues());
+			//return CacheClient.SetAddAll<T>(redisKey, items.ToArray());
+			foreach(var v in items)
+			{
+				Add(v);
+			}
+			return 0;
 		}
 
 		public void ExceptWith(IEnumerable<T> other)
@@ -217,7 +223,7 @@ namespace StackExchange.Redis.DataTypes.Collections
 				throw new ArgumentNullException("other");
 			}
 
-			var otherSet = new RedisSet<T>(database, Guid.NewGuid().ToString());
+			var otherSet = new RedisSet<T>(CacheClient, Guid.NewGuid().ToString());
 			try
 			{
 				otherSet.Add(other);
@@ -236,7 +242,7 @@ namespace StackExchange.Redis.DataTypes.Collections
 				throw new ArgumentNullException("other");
 			}
 
-			var intersectedSet = new RedisSet<T>(database, Guid.NewGuid().ToString());
+			var intersectedSet = new RedisSet<T>(CacheClient, Guid.NewGuid().ToString());
 			try
 			{
 				SetCombineAndStore(SetOperation.Intersect, intersectedSet, this, other);
@@ -276,12 +282,12 @@ namespace StackExchange.Redis.DataTypes.Collections
 
 		public void Clear()
 		{
-			database.KeyDelete(redisKey);
+			CacheClient.Database.KeyDelete(redisKey);
 		}
 
 		public bool Contains(T item)
 		{
-			return database.SetContains(redisKey, item.ToRedisValue());
+			return CacheClient.Database.SetContains(redisKey, CacheClient.Serializer.Serialize( item));
 		}
 
 		void ICollection<T>.CopyTo(T[] array, int index)
@@ -309,7 +315,7 @@ namespace StackExchange.Redis.DataTypes.Collections
 		{
 			get
 			{
-				long count = database.SetLength(redisKey);
+				long count = CacheClient.Database.SetLength(redisKey);
 				if (count > int.MaxValue)
 				{
 					throw new OverflowException("Count exceeds maximum value of integer.");
@@ -328,15 +334,13 @@ namespace StackExchange.Redis.DataTypes.Collections
 
 		public bool Remove(T item)
 		{
-			return database.SetRemove(redisKey, item.ToRedisValue());
+			return CacheClient.Database.SetRemove(redisKey, CacheClient.Serializer.Serialize( item));
 		}
 
 		public IEnumerator<T> GetEnumerator()
 		{
-			return database
-						.SetScan(redisKey)
-						.Select(redisValue => redisValue.To<T>())
-						.GetEnumerator();
+			return CacheClient.SetMembers<T>(redisKey).GetEnumerator();
+
 		}
 
 		IEnumerator IEnumerable.GetEnumerator()
@@ -346,7 +350,7 @@ namespace StackExchange.Redis.DataTypes.Collections
 
 		private void SetCombineAndStore(SetOperation operation, IEnumerable<T> other)
 		{
-			var redisTempSet = new RedisSet<T>(database, Guid.NewGuid().ToString());
+			var redisTempSet = new RedisSet<T>(CacheClient, Guid.NewGuid().ToString());
 			try
 			{
 				redisTempSet.Add(other);
@@ -365,12 +369,12 @@ namespace StackExchange.Redis.DataTypes.Collections
 
 		private void SetCombineAndStore(SetOperation operation, RedisSet<T> destination, RedisSet<T> first, RedisSet<T> second)
 		{
-			database.SetCombineAndStore(operation, destination.redisKey, first.redisKey, second.redisKey);
+			CacheClient.Database.SetCombineAndStore(operation, destination.redisKey, first.redisKey, second.redisKey);
 		}
 
 		private RedisValue[] SetCombine(SetOperation operation, RedisSet<T> other)
 		{
-			return database.SetCombine(operation, redisKey, other.redisKey);
+			return CacheClient.Database.SetCombine(operation, redisKey, other.redisKey);
 		}
 	}
 }
