@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace StackExchange.Redis.DataTypes.Samples
 {
+	//[Serializable]
 	public class Person
 	{
 		public int ID { get; set; }

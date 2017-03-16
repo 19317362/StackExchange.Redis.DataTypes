@@ -1,6 +1,7 @@
 ﻿using StackExchange.Redis.DataTypes.Collections;
 using StackExchange.Redis.Extensions.Core;
 using StackExchange.Redis.Extensions.Protobuf;
+using StackExchange.Redis.Extensions.MsgPack;
 using System;
 
 namespace StackExchange.Redis.DataTypes
@@ -20,13 +21,37 @@ namespace StackExchange.Redis.DataTypes
 			this.database = connectionMultiplexer.GetDatabase();
 
 		}
-		public RedisTypeFactory()
+
+
+		public RedisTypeFactory(bool msgbuf=true)
 		{
-			var serializer = new ProtobufSerializer();
-			CacheClient = new StackExchangeRedisCacheClient(serializer);
+			//var serializer = msgbuf ?  new ProtobufSerializer() : new MsgPackObjectSerializer();
+			if(msgbuf)
+			{
+				CacheClient = new StackExchangeRedisCacheClient(
+					 new MsgPackObjectSerializer()
+					);
+
+			}
+			else
+			{
+				CacheClient = new StackExchangeRedisCacheClient(
+						new ProtobufSerializer()
+					);
+
+			}
+
 			this.database = CacheClient.Database;
 		}
-
+		public TValue GetValue<TValue>(string key)
+		{
+			return CacheClient.Get<TValue>(key);
+			//return database.StringGet(key);
+		}
+		public void StoreValue<TValue>(string key, TValue obj)
+		{
+			CacheClient.Add(key, obj);
+		}
 		public RedisDictionary<TKey, TValue> GetDictionary<TKey, TValue>(string name)
 		{
 			return new RedisDictionary<TKey, TValue>(database, name);

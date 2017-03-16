@@ -13,12 +13,15 @@ namespace StackExchange.Redis.DataTypes.Samples
 		static void Main(string[] args)
 		{
 			// Create connectionMultiplexer. Creating connectionMultiplexer is costly so it is recommended to store and reuse it.
-			var connectionMultiplexer = ConnectionMultiplexer.Connect("localhost:8379,abortConnect=false"); // replace localhost with your redis db address
+			//var connectionMultiplexer = ConnectionMultiplexer.Connect("localhost:8379,abortConnect=false"); // replace localhost with your redis db address
 
 			// You can either create a RedisType by using RedisTypeFactory or by instantiating the desired type directly.
 			//var redisTypeFactory = new RedisTypeFactory(connectionMultiplexer);
 
 			var redisTypeFactory = new RedisTypeFactory();
+
+			redisTypeFactory.StoreValue("test", new Person { ID = 1, Name = "WPS8848", Age = 20 });
+			var kk = redisTypeFactory.GetValue<Person>("test");
 			// Create a redis dictionary under the name of "Person".
 			var redisDictionary = redisTypeFactory.GetDictionary<int, Person>("Person");
 
@@ -44,7 +47,7 @@ namespace StackExchange.Redis.DataTypes.Samples
 
 			// Delete the Person dictionary from redis
 			redisDictionary.Clear();
-
+/*
 			// Creating a redis list
 			var redisList = new RedisList<int>(connectionMultiplexer.GetDatabase(), "Numbers");
 
@@ -90,7 +93,7 @@ namespace StackExchange.Redis.DataTypes.Samples
 			{
 				Console.WriteLine(item);
 			}
-
+*/
 			Console.WriteLine();
 			Console.WriteLine("Press any key to exit...");
 			Console.Read();
