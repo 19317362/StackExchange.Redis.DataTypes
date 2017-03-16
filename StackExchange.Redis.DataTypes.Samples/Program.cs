@@ -119,7 +119,7 @@ namespace StackExchange.Redis.DataTypes.Samples
 				Console.WriteLine("v {0} {1}", v.Value.Name, v.Value.Age);
 
 			}
-
+			//context.Cache.
 		}
 	}
 }
