@@ -1,4 +1,5 @@
-﻿using System;
+﻿using StackExchange.Redis.Extensions.Core;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,21 +14,21 @@ namespace StackExchange.Redis.DataTypes.Collections
 
 		private static Exception IndexOutOfRangeException = new ArgumentOutOfRangeException("index", "Index must be within the bounds of the List.");
 
-		private readonly IDatabase database;
+		private readonly StackExchangeRedisCacheClient CacheClient;
 		private readonly string redisKey;
 
-		public RedisList(IDatabase database, string name)
+		public RedisList(StackExchangeRedisCacheClient cacheClient, string name)
 		{
-			if (database == null)
+			if (cacheClient == null)
 			{
-				throw new ArgumentNullException("database");
+				throw new ArgumentNullException("CacheClient");
 			}
 			if (name == null)
 			{
 				throw new ArgumentNullException("name");
 			}
 
-			this.database = database;
+			this.CacheClient = cacheClient;
 			this.redisKey = string.Format(RedisKeyTemplate, name);
 		}
 
@@ -49,7 +50,7 @@ namespace StackExchange.Redis.DataTypes.Collections
 		{
 			try
 			{
-				database.ListSetByIndex(redisKey, index, item.ToRedisValue());
+				CacheClient.Database.ListSetByIndex(redisKey, index, CacheClient.Serializer.Serialize(item));
 			}
 			catch (RedisServerException redisServerException)
 			{
@@ -66,7 +67,7 @@ namespace StackExchange.Redis.DataTypes.Collections
 			string deleteFlag = Guid.NewGuid().ToString();
 			try
 			{
-				database.ListSetByIndex(redisKey, index, deleteFlag, CommandFlags.FireAndForget);
+				CacheClient.Database.ListSetByIndex(redisKey, index, deleteFlag, CommandFlags.FireAndForget);
 			}
 			catch (RedisServerException redisServerException)
 			{
@@ -76,7 +77,7 @@ namespace StackExchange.Redis.DataTypes.Collections
 				}
 				throw;
 			}
-			database.ListRemove(redisKey, deleteFlag, flags: CommandFlags.FireAndForget);
+			CacheClient.Database.ListRemove(redisKey, deleteFlag, flags: CommandFlags.FireAndForget);
 		}
 
 		public T this[int index]
@@ -85,7 +86,8 @@ namespace StackExchange.Redis.DataTypes.Collections
 			{
 				try
 				{
-					return database.ListGetByIndex(redisKey, index).To<T>();
+					var data = CacheClient.Database.ListGetByIndex(redisKey, index);
+					return CacheClient.Serializer.Deserialize<T>(data);
 				}
 				catch (RedisServerException redisServerException)
 				{
@@ -104,12 +106,12 @@ namespace StackExchange.Redis.DataTypes.Collections
 
 		public void Add(T item)
 		{
-			database.ListRightPush(redisKey, item.ToRedisValue());
+			CacheClient.Database.ListRightPush(redisKey, CacheClient.Serializer.Serialize( item));
 		}
 
 		public void Clear()
 		{
-			database.KeyDelete(redisKey);
+			CacheClient.Database.KeyDelete(redisKey);
 		}
 
 		public bool Contains(T item)
@@ -142,7 +144,7 @@ namespace StackExchange.Redis.DataTypes.Collections
 		{
 			get
 			{
-				long count = database.ListLength(redisKey);
+				long count = CacheClient.Database.ListLength(redisKey);
 				if (count > int.MaxValue)
 				{
 					throw new OverflowException("Count exceeds maximum value of integer.");

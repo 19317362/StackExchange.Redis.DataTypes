@@ -19,9 +19,9 @@ namespace StackExchange.Redis.DataTypes.Collections
 		private readonly string redisKey;
 		private readonly StackExchangeRedisCacheClient CacheClient;
 
-		public RedisDictionary(StackExchangeRedisCacheClient CacheClient, string name)
+		public RedisDictionary(StackExchangeRedisCacheClient cacheClient, string name)
 		{
-			if (CacheClient == null)
+			if (cacheClient == null)
 			{
 				throw new ArgumentNullException("CacheClient");
 			}
@@ -30,7 +30,7 @@ namespace StackExchange.Redis.DataTypes.Collections
 				throw new ArgumentNullException("name");
 			}
 
-			this.CacheClient = CacheClient;
+			this.CacheClient = cacheClient;
 			this.redisKey = string.Format(RedisKeyTemplate, name);
 		}
 

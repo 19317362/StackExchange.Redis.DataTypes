@@ -47,9 +47,8 @@ namespace StackExchange.Redis.DataTypes.Samples
 
 			// Delete the Person dictionary from redis
 			redisDictionary.Clear();
-/*
 			// Creating a redis list
-			var redisList = new RedisList<int>(connectionMultiplexer.GetDatabase(), "Numbers");
+			var redisList = redisTypeFactory.GetList<int>("Numbers");
 
 			// Adding some numbers to redis list
 			for (int i = 0; i < 10; i++)
@@ -69,34 +68,35 @@ namespace StackExchange.Redis.DataTypes.Samples
 			// Delete the Numbers list from redis
 			redisList.Clear();
 
-			// Using a DI container...
-			var container = new UnityContainer();
+			/*
+						// Using a DI container...
+						var container = new UnityContainer();
 
-			// Register connectionMultiplexer as a singleton instance
-			container.RegisterInstance<IConnectionMultiplexer>(connectionMultiplexer);
-			// Register RedisTypeFactory
-			container.RegisterType<IRedisTypeFactory, RedisTypeFactory>();
-			// Resolve an IRedisTypeFacoty
-			var factory = container.Resolve<IRedisTypeFactory>();
+						// Register connectionMultiplexer as a singleton instance
+						container.RegisterInstance<IConnectionMultiplexer>(connectionMultiplexer);
+						// Register RedisTypeFactory
+						container.RegisterType<IRedisTypeFactory, RedisTypeFactory>();
+						// Resolve an IRedisTypeFacoty
+						var factory = container.Resolve<IRedisTypeFactory>();
 
-			// Get a redis set from factory
-			var redisSet = factory.GetSet<int>("NumbersSet");
-			redisSet.Add(1);
-			redisSet.Add(1);
-			redisSet.Add(2);
+						// Get a redis set from factory
+						var redisSet = factory.GetSet<int>("NumbersSet");
+						redisSet.Add(1);
+						redisSet.Add(1);
+						redisSet.Add(2);
 
-			Console.WriteLine();
-			Console.WriteLine("Set Members:");
+						Console.WriteLine();
+						Console.WriteLine("Set Members:");
 
-			// Iterating through set
-			foreach (var item in redisSet)
-			{
-				Console.WriteLine(item);
-			}
-*/
+						// Iterating through set
+						foreach (var item in redisSet)
+						{
+							Console.WriteLine(item);
+						}
+			*/
 			Console.WriteLine();
 			Console.WriteLine("Press any key to exit...");
-			Console.Read();
+			//Console.Read();
 		}
 	}
 }

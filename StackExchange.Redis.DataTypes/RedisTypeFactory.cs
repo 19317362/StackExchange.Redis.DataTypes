@@ -53,7 +53,7 @@ namespace StackExchange.Redis.DataTypes
 
 		public RedisList<T> GetList<T>(string name)
 		{
-			return new RedisList<T>(database, name);
+			return new RedisList<T>(CacheClient, name);
 		}
 	}
 }
