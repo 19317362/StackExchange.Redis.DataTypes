@@ -10,17 +10,6 @@ namespace StackExchange.Redis.DataTypes
 	{
 		private readonly IDatabase database;
 		private readonly StackExchangeRedisCacheClient CacheClient;
-		public RedisTypeFactory(IConnectionMultiplexer connectionMultiplexer)
-		{
-			if (connectionMultiplexer == null)
-			{
-				throw new ArgumentNullException("connectionMultiplexer");
-			}
-
-
-			this.database = connectionMultiplexer.GetDatabase();
-
-		}
 
 
 		public RedisTypeFactory(bool msgbuf=true)
@@ -54,7 +43,7 @@ namespace StackExchange.Redis.DataTypes
 		}
 		public RedisDictionary<TKey, TValue> GetDictionary<TKey, TValue>(string name)
 		{
-			return new RedisDictionary<TKey, TValue>(database, name);
+			return new RedisDictionary<TKey, TValue>(CacheClient, name);
 		}
 
 		public RedisSet<T> GetSet<T>(string name)

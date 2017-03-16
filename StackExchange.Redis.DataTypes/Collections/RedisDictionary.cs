@@ -1,4 +1,5 @@
-﻿using System;
+﻿using StackExchange.Redis.Extensions.Core;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,21 +15,22 @@ namespace StackExchange.Redis.DataTypes.Collections
 		private static Exception KeyNullException = new ArgumentNullException("key", "Value cannot be null");
 		private static Exception KeyAlreadyExistsException = new ArgumentException("An item with the same key has already been added.");
 
-		private readonly IDatabase database;
+		//private readonly IDatabase CacheClient;
 		private readonly string redisKey;
+		private readonly StackExchangeRedisCacheClient CacheClient;
 
-		public RedisDictionary(IDatabase database, string name)
+		public RedisDictionary(StackExchangeRedisCacheClient CacheClient, string name)
 		{
-			if (database == null)
+			if (CacheClient == null)
 			{
-				throw new ArgumentNullException("database");
+				throw new ArgumentNullException("CacheClient");
 			}
 			if (name == null)
 			{
 				throw new ArgumentNullException("name");
 			}
 
-			this.database = database;
+			this.CacheClient = CacheClient;
 			this.redisKey = string.Format(RedisKeyTemplate, name);
 		}
 
@@ -54,14 +56,14 @@ namespace StackExchange.Redis.DataTypes.Collections
 				throw KeyNullException;
 			}
 
-			return database.HashExists(redisKey, key.ToRedisValue());
+			return CacheClient.HashExists(redisKey, key.ToRedisValue());
 		}
 
 		public ICollection<TKey> Keys
 		{
 			get
 			{
-				return database.HashKeys(redisKey).Select(key => key.To<TKey>()).ToList();
+				return CacheClient.HashKeys(redisKey).Select(key => key.To<TKey>()).ToList();
 			}
 		}
 
@@ -72,7 +74,7 @@ namespace StackExchange.Redis.DataTypes.Collections
 				throw KeyNullException;
 			}
 
-			return database.HashDelete(redisKey, key.ToRedisValue());
+			return CacheClient.HashDelete(redisKey, key.ToRedisValue());
 		}
 
 		public bool TryGetValue(TKey key, out TValue value)
@@ -82,14 +84,18 @@ namespace StackExchange.Redis.DataTypes.Collections
 				throw KeyNullException;
 			}
 
-			value = default(TValue);
-			var redisValue = database.HashGet(redisKey, key.ToRedisValue());
-			if (redisValue.IsNullOrEmpty)
+			//			value = default(TValue);
+			// 			var redisValue = CacheClient.HashGet(redisKey, key.ToRedisValue());
+			// 			if (redisValue.IsNullOrEmpty)
+			// 			{
+			// 				return false;
+			// 			}
+			//value = redisValue.To<TValue>();
+			value = CacheClient.HashGet<TValue>(redisKey, key.ToRedisValue());
+			if (value == null)
 			{
 				return false;
 			}
-			value = redisValue.To<TValue>();
-
 			return true;
 		}
 
@@ -97,7 +103,7 @@ namespace StackExchange.Redis.DataTypes.Collections
 		{
 			get
 			{
-				return database.HashValues(redisKey).Select(val => val.To<TValue>()).ToList();
+				return CacheClient.HashValues<TValue>(redisKey).ToList();
 			}
 		}
 
@@ -125,7 +131,7 @@ namespace StackExchange.Redis.DataTypes.Collections
 
 		public void Clear()
 		{
-			database.KeyDelete(redisKey);
+			CacheClient.Remove(redisKey);
 		}
 
 		bool ICollection<KeyValuePair<TKey, TValue>>.Contains(KeyValuePair<TKey, TValue> item)
@@ -160,7 +166,7 @@ namespace StackExchange.Redis.DataTypes.Collections
 		{
 			get
 			{
-				long count = database.HashLength(redisKey);
+				long count = CacheClient.HashLength(redisKey);
 				if (count > int.MaxValue)
 				{
 					throw new OverflowException("Count exceeds maximum value of integer.");
@@ -184,9 +190,14 @@ namespace StackExchange.Redis.DataTypes.Collections
 
 		public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
 		{
-			return database
-						.HashScan(redisKey)
-						.Select(he => new KeyValuePair<TKey, TValue>(he.Name.To<TKey>(), he.Value.To<TValue>()))
+// 			return CacheClient
+// 						.HashScan(redisKey)
+// 						.Select(he => new KeyValuePair<TKey, TValue>(he.Name.To<TKey>(), he.Value.To<TValue>()))
+// 						.GetEnumerator();
+			return CacheClient
+						.HashGetAll<TKey>(redisKey)
+						.Select(he =>
+						new KeyValuePair<TKey, TValue>(he.Key.To<TKey>() , he.Value))
 						.GetEnumerator();
 		}
 
@@ -197,7 +208,8 @@ namespace StackExchange.Redis.DataTypes.Collections
 
 		private bool Set(TKey key, TValue value)
 		{
-			return database.HashSet(redisKey, key.ToRedisValue(), value.ToRedisValue());
+			//CacheClient.
+			return CacheClient.HashSet(redisKey, key.ToRedisValue(), value.ToRedisValue());
 		}
 
 		private bool IsKeyNull(TKey key)
