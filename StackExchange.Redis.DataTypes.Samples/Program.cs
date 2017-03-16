@@ -23,12 +23,12 @@ namespace StackExchange.Redis.DataTypes.Samples
 			redisTypeFactory.StoreValue("test", new Person { ID = 1, Name = "WPS8848", Age = 20 });
 			var kk = redisTypeFactory.GetValue<Person>("test");
 			// Create a redis dictionary under the name of "Person".
-			var redisDictionary = redisTypeFactory.GetDictionary<int, Person>("Person");
+			var redisDictionary = redisTypeFactory.GetDictionary<Person>("Person");
 
 			// Adding items to dictionary
-			redisDictionary.Add(1, new Person { ID = 1, Name = "Steve", Age = 20 });
-			redisDictionary.Add(2, new Person { ID = 2, Name = "Mike", Age = 25 });
-			redisDictionary.Add(3, new Person { ID = 3, Name = "Lara", Age = 30 });
+			redisDictionary.TryAdd("1", new Person { ID = 1, Name = "Steve", Age = 20 });
+			redisDictionary.TryAdd("2", new Person { ID = 2, Name = "Mike", Age = 25 });
+			redisDictionary.TryAdd("3", new Person { ID = 3, Name = "Lara", Age = 30 });
 
 			// Iterate through dictionary
 			foreach (var person in redisDictionary)

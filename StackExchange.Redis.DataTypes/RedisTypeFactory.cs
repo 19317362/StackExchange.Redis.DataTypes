@@ -41,9 +41,9 @@ namespace StackExchange.Redis.DataTypes
 		{
 			CacheClient.Add(key, obj);
 		}
-		public RedisDictionary<TKey, TValue> GetDictionary<TKey, TValue>(string name)
+		public RedisDictionary<TValue> GetDictionary<TValue>(string name)
 		{
-			return new RedisDictionary<TKey, TValue>(CacheClient, name);
+			return new RedisDictionary<TValue>(CacheClient, name);
 		}
 
 		public RedisSet<T> GetSet<T>(string name)
