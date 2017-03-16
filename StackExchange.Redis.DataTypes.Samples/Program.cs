@@ -6,12 +6,14 @@ using System.Threading.Tasks;
 using StackExchange.Redis.DataTypes.Collections;
 using Microsoft.Practices.Unity;
 
+
 namespace StackExchange.Redis.DataTypes.Samples
 {
 	class Program
 	{
 		static void Main(string[] args)
 		{
+			TestCachingFramework();
 			// Create connectionMultiplexer. Creating connectionMultiplexer is costly so it is recommended to store and reuse it.
 			//var connectionMultiplexer = ConnectionMultiplexer.Connect("localhost:8379,abortConnect=false"); // replace localhost with your redis db address
 
@@ -98,6 +100,26 @@ namespace StackExchange.Redis.DataTypes.Samples
 			Console.WriteLine();
 			Console.WriteLine("Press any key to exit...");
 			//Console.Read();
+
+
+		}
+		static void TestCachingFramework()
+		{//https://github.com/thepirat000/CachingFramework.Redis#serialization
+			var context = new CachingFramework.Redis.Context("127.0.0.1:8379, connectRetry=10, abortConnect=false, allowAdmin=true"
+				, new MsgBufWrapper()
+				);
+			var hash = context.Collections.GetRedisDictionary<int, Person>("Person:hash");
+			hash.Add(1, new Person { ID = 1, Name = "Steve", Age = 20 });
+			hash.Add(2, new Person { ID = 2, Name = "David", Age = 88 });
+			var dv = hash.FirstOrDefault(L => L.Value.Name == "David");
+			Console.WriteLine("dd {0} {1}", dv.Value.Name, dv.Value.Age);
+
+			foreach(var v in hash)
+			{
+				Console.WriteLine("v {0} {1}", v.Value.Name, v.Value.Age);
+
+			}
+
 		}
 	}
 }
