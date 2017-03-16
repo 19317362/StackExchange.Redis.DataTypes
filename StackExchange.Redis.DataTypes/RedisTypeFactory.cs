@@ -1,4 +1,6 @@
 ﻿using StackExchange.Redis.DataTypes.Collections;
+using StackExchange.Redis.Extensions.Core;
+using StackExchange.Redis.Extensions.Protobuf;
 using System;
 
 namespace StackExchange.Redis.DataTypes
@@ -6,7 +8,7 @@ namespace StackExchange.Redis.DataTypes
 	public class RedisTypeFactory : IRedisTypeFactory
 	{
 		private readonly IDatabase database;
-
+		private readonly StackExchangeRedisCacheClient CacheClient;
 		public RedisTypeFactory(IConnectionMultiplexer connectionMultiplexer)
 		{
 			if (connectionMultiplexer == null)
@@ -14,7 +16,15 @@ namespace StackExchange.Redis.DataTypes
 				throw new ArgumentNullException("connectionMultiplexer");
 			}
 
+
 			this.database = connectionMultiplexer.GetDatabase();
+
+		}
+		public RedisTypeFactory()
+		{
+			var serializer = new ProtobufSerializer();
+			CacheClient = new StackExchangeRedisCacheClient(serializer);
+			this.database = CacheClient.Database;
 		}
 
 		public RedisDictionary<TKey, TValue> GetDictionary<TKey, TValue>(string name)
